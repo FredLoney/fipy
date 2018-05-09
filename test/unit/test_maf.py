@@ -4,7 +4,6 @@ from nose.tools import (assert_true, assert_equal)
 from .. import ROOT
 from reactome.fipy import maf
 import csv
-import logging
 
 # The test results directory.
 RESULTS = os.path.join(ROOT, 'results', 'maf')
@@ -14,9 +13,8 @@ class TestMaf(object):
     """MAF download tests."""
 
     def setUp(self):
-        #shutil.rmtree(RESULTS, True)
-        #os.makedirs(RESULTS)
-        logging.disable(logging.DEBUG)
+        shutil.rmtree(RESULTS, True)
+        os.makedirs(RESULTS)
 
     def test_download(self):
         cohort = 'OV'
