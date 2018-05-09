@@ -1,7 +1,7 @@
 import os
+import logging
 import requests
 import pandas as pd
-from .logger import logger
 from .constants import DEF_MIN_SAMPLE_COUNT
 from . import (cytoscape, rest)
 
@@ -14,6 +14,11 @@ def prepare(*cohorts, **kwargs):
     This convenience function builds the network and clusters
     modules.
 
+    If there is only one input cohort, then the result is the
+    cluster data frame. Otherwise, the result is a list
+    of cluster data frames in the same order as the input
+    cohorts.
+
     :param cohorts: the cancer type cohort names
     :param kwargs: the following options:
     :option in_dir: the directory with the MAF files
@@ -21,11 +26,22 @@ def prepare(*cohorts, **kwargs):
     :option min_sample_count: the absolute minimum number
         of samples
     :option min_sample_proportion: the minimum proportion of samples
-    :return: the list of cluster data series
+    :return: the cluster or list of clusters
     """
     in_dir = kwargs.pop('in_dir', os.getcwd())
-    return [_prepare_cohort(cohort, in_dir, **kwargs)
-            for cohort in cohorts]
+    clusters = [_prepare_cohort(cohort, in_dir, **kwargs)
+                for cohort in cohorts]
+    return clusters[0] if len(clusters) == 1 else clusters
+
+
+def limit_module_size(cluster, cutoff):
+    """
+    :param cluster: the input cluster series
+    :param cutoff: the minimum cluster size
+    :return the cluster series whose modules are at least as
+        large as the cut-off
+    """
+    return cluster.loc[cluster.apply(len).ge(cutoff)]
 
 
 def _prepare_cohort(cohort, in_dir, **kwargs):
@@ -84,12 +100,12 @@ def cluster(name):
     :return: the cluster data series with index *Module*
     """
     # Cluster the currently displayed network.
-    logger.info("Clustering the %s FI network..." % name)
+    logging.info("Clustering the %s FI network..." % name)
     resp = requests.get(rest.get_fi_url('cluster'))
     # Parse the response JSON into a data frame.
     parsed = rest.parse_fi_table_response(resp, parsers=PARSERS,
                                           index='Module')
-    logger.info("The %s cluster table is available in Cytoscape." % name)
+    logging.info("The %s cluster table is available in Cytoscape." % name)
     genesets = parsed['Node List']
     genesets.name = name
 
@@ -107,14 +123,14 @@ def _get_sample_count(maf_file):
                          usecols=['Tumor_Sample_Barcode'])
     # The number of samples.
     sample_cnt = len({tsb for tsb in maf_df.Tumor_Sample_Barcode})
-    logger.debug("Sample Count: %d" % sample_cnt)
+    logging.debug("Sample Count: %d" % sample_cnt)
 
     return sample_cnt
 
 
 def _load_network(maf_file, sample_cutoff):
         """Loads the network into Cytoscape."""
-        logger.info("Building the FI network with sample cut-off %d..." %
+        logging.info("Building the FI network with sample cut-off %d..." %
               sample_cutoff)
         # Build the FI network with 1% sample cut-off.
         body = dict(fiVersion='2016', format='MAF', file=maf_file,
@@ -123,4 +139,4 @@ def _load_network(maf_file, sample_cutoff):
                     fetchFIAnnotations=True,
                     sampleCutoffValue=sample_cutoff)
         requests.post(rest.get_fi_url('buildFISubNetwork'), json=body)
-        logger.info("The FI network is loaded to Cytoscape.")
+        logging.info("The FI network is loaded to Cytoscape.")
