@@ -19,9 +19,9 @@ class TestOverlap(object):
         assert_equal(20, overlaps.index.size,
                      "Overlap size incorrect: %d" % overlaps.index.size)
         # Restrict by FDR.
-        shared = overlaps[overlaps.FDR.ge(.01)]
-        assert_equal(11, shared.index.size,
-                     "Shared size incorrect: %d" % shared.index.size)
+        filtered = limit_overlap(overlaps, 'FDR', .01)
+        assert_equal(11, filtered.index.size,
+                     "Shared size incorrect: %d" % filtered.index.size)
 
 
 if __name__ == "__main__":
