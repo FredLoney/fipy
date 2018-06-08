@@ -38,7 +38,7 @@ def limit_module_size(cluster, cutoff):
     """
     :param cluster: the input cluster series
     :param cutoff: the minimum cluster size
-    :return the cluster series whose modules are at least as
+    :return: the cluster series whose modules are at least as
         large as the cut-off
     """
     return cluster.loc[cluster.apply(len).ge(cutoff)]

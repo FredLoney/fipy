@@ -1,5 +1,6 @@
 from functools import reduce
 import pandas as pd
+import warnings
 from scipy.stats import hypergeom
 from statsmodels.sandbox.stats.multicomp import multipletests
 from IPython.display import HTML
@@ -16,7 +17,7 @@ def analyse(clusters, n=None):
     :param clusters: the cluster series collection
     :param n: the background gene count
         (default :const:`reactome.fipy.constants.BACKGROUND_GENE_CNT`)
-    :return the overlap data frame
+    :return: the overlap data frame
     """
     if not n:
         n = BACKGROUND_GENE_CNT
@@ -58,7 +59,7 @@ def limit_overlap(overlaps, column, cutoff):
     """
     Restricts the given overlaps data frame to those module
     pairs whose FDR is no greater than the given cut-off.
-    
+
     :param overlaps: the overlaps data frame
     :param column: the overlaps column name (`FDR` or `p-value`)
     :param cutoff: the threshold value
